@@ -12,6 +12,8 @@ import { DatabaseModule } from './database/database.module';
         RABBITMQ_USER: Joi.string(),
         RABBITMQ_PASSWORD: Joi.string(),
         RABBITMQ_HOST: Joi.string(),
+        STRIPE_SECRET_KEY: Joi.string(),
+        STRIPE_CURRENCY: Joi.string(),
       }),
     }),
     StripeModule,
