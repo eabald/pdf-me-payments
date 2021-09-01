@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
-import { CreateStripeCustomerDto } from '@pdf-me/shared';
+import { CreateStripeCustomerDto, CreateChargeDto } from '@pdf-me/shared';
 
 @Injectable()
 export class StripeService {
@@ -15,5 +15,19 @@ export class StripeService {
 
   async createStripeCustomer({ name, email }: CreateStripeCustomerDto) {
     return this.stripe.customers.create({ name, email });
+  }
+
+  async charge({
+    amount,
+    paymentMethodId,
+    customerId,
+    currency,
+  }: CreateChargeDto) {
+    return this.stripe.paymentIntents.create({
+      amount,
+      customer: customerId,
+      payment_method: paymentMethodId,
+      currency,
+    });
   }
 }
