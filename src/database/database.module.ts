@@ -7,6 +7,7 @@ import {
   FileEntity,
   LimitEntity,
   PaymentEntity,
+  ProductEntity,
 } from '@pdf-me/shared';
 
 @Module({
@@ -27,6 +28,7 @@ import {
           FileEntity,
           LimitEntity,
           PaymentEntity,
+          ProductEntity,
         ],
         synchronize: true,
         logging: true,

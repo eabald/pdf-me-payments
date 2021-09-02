@@ -11,4 +11,9 @@ export class PaymentsController {
   async createPayment(@Payload() payload: CreatePaymentDto) {
     return this.paymentsService.createPayment(payload);
   }
+
+  @MessagePattern({ cmd: 'payments-update-status' })
+  async updateStatus() {
+    return this.paymentsService.updateStatus();
+  }
 }
