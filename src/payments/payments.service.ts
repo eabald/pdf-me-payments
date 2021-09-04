@@ -29,11 +29,19 @@ export class PaymentsService {
   }
 
   async updateStatus({ signature, payload }: StripeWebhookDataDto) {
-    // check if signature exists signature
+    if (!signature) {
+      return false;
+    }
     const event = await this.stripeService.constructEventFromPayload(
       signature,
       payload,
     );
+    const eventInDb = await this.stripeService.checkEvent(event.id);
+    if (eventInDb) {
+      return;
+    } else {
+      await this.stripeService.saveEvent(event.id);
+    }
     if (event.type === 'payment_intent.succeeded') {
       const paymentData: any = event.data.object;
       const currentPayment = await this.paymentsRepository.findOne({

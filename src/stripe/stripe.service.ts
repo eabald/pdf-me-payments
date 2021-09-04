@@ -1,13 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
-import { CreateStripeCustomerDto, CreateChargeDto } from '@pdf-me/shared';
+import {
+  CreateStripeCustomerDto,
+  CreateChargeDto,
+  StripeEventEntity,
+} from '@pdf-me/shared';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class StripeService {
   private stripe: Stripe;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    @InjectRepository(StripeEventEntity)
+    private stripeEventsRepository: Repository<StripeEventEntity>,
+  ) {
     this.stripe = new Stripe(configService.get('STRIPE_SECRET_KEY'), {
       apiVersion: '2020-08-27',
     });
@@ -31,12 +41,23 @@ export class StripeService {
     });
   }
 
-  public async constructEventFromPayload(signature: string, payload: Buffer) {
+  async constructEventFromPayload(signature: string, payload: Buffer) {
     const webhookSecret = this.configService.get('STRIPE_WEBHOOK_SECRET');
     return this.stripe.webhooks.constructEvent(
       payload,
       signature,
       webhookSecret,
     );
+  }
+
+  async saveEvent(eventId: string) {
+    const newEvent = await this.stripeEventsRepository.create({ eventId });
+    await this.stripeEventsRepository.save(newEvent);
+    return newEvent;
+  }
+
+  async checkEvent(eventId: string) {
+    const event = await this.stripeEventsRepository.findOne({ eventId });
+    return !!event;
   }
 }

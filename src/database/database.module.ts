@@ -8,6 +8,7 @@ import {
   LimitEntity,
   PaymentEntity,
   ProductEntity,
+  StripeEventEntity,
 } from '@pdf-me/shared';
 
 @Module({
@@ -29,6 +30,7 @@ import {
           LimitEntity,
           PaymentEntity,
           ProductEntity,
+          StripeEventEntity,
         ],
         synchronize: true,
         logging: true,
