@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { PaymentsController } from './payments.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PaymentEntity } from '@pdf-me/shared';
+import { PaymentEntity, ProductEntity } from '@pdf-me/shared';
 import { StripeModule } from '../stripe/stripe.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientProxyFactory, Transport } from '@nestjs/microservices';
@@ -10,6 +10,7 @@ import { ClientProxyFactory, Transport } from '@nestjs/microservices';
 @Module({
   imports: [
     TypeOrmModule.forFeature([PaymentEntity]),
+    TypeOrmModule.forFeature([ProductEntity]),
     StripeModule,
     ConfigModule,
   ],

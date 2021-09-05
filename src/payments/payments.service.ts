@@ -1,16 +1,24 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { CreatePaymentDto } from '@pdf-me/shared';
+import { Injectable, Inject, HttpStatus } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PaymentEntity, StripeWebhookDataDto } from '@pdf-me/shared';
+import {
+  PaymentEntity,
+  StripeWebhookDataDto,
+  CreateSubscriptionDto,
+  ProductEntity,
+  CreatePaymentDto,
+} from '@pdf-me/shared';
 import { Repository } from 'typeorm';
 import { StripeService } from '../stripe/stripe.service';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import Stripe from 'stripe';
 
 @Injectable()
 export class PaymentsService {
   constructor(
     @InjectRepository(PaymentEntity)
     private paymentsRepository: Repository<PaymentEntity>,
+    @InjectRepository(ProductEntity)
+    private productRepository: Repository<ProductEntity>,
     private readonly stripeService: StripeService,
     @Inject('LIMITS_SERVICE') private limitsService: ClientProxy,
   ) {}
@@ -43,18 +51,32 @@ export class PaymentsService {
       await this.stripeService.saveEvent(event.id);
     }
     if (event.type === 'payment_intent.succeeded') {
-      const paymentData: any = event.data.object;
-      const currentPayment = await this.paymentsRepository.findOne({
-        where: { transactionId: paymentData.id },
-        relations: ['product'],
-      });
+      return await this.procesCharge(event);
+    }
+    if (
+      event.type === 'customer.subscription.updated' ||
+      event.type === 'customer.subscription.created'
+    ) {
+      return await this.processSubscription(event);
+    }
+  }
+
+  async processSubscription(event: Stripe.Event) {
+    const paymentData = event.data.object as Stripe.Subscription;
+    const subscriptionStatus = paymentData.status;
+    const currentPayment = await this.paymentsRepository.findOne({
+      where: { transactionId: paymentData.id },
+      relations: ['product'],
+    });
+    if (subscriptionStatus === 'active') {
       const date = new Date();
       await this.limitsService
         .send(
-          { cmd: 'limits-set-additional' },
+          { cmd: 'limits-set-subscription' },
           {
             userId: currentPayment.userId,
             limit: currentPayment.product.size,
+            perHourLimit: currentPayment.product.size,
             extraValidTo: currentPayment.product.validFor
               ? date.setDate(date.getDate() + currentPayment.product.validFor)
               : null,
@@ -66,6 +88,75 @@ export class PaymentsService {
         fulfilledAt: Date.now(),
       });
       return payment;
+    } else {
+      await this.limitsService
+        .send({ cmd: 'limits-reset-subscription-by-id' }, currentPayment.userId)
+        .toPromise();
     }
+    return false;
+  }
+
+  async procesCharge(event: Stripe.Event) {
+    const paymentData: any = event.data.object;
+    const currentPayment = await this.paymentsRepository.findOne({
+      where: { transactionId: paymentData.id },
+      relations: ['product'],
+    });
+    const date = new Date();
+    await this.limitsService
+      .send(
+        { cmd: 'limits-set-additional' },
+        {
+          userId: currentPayment.userId,
+          limit: currentPayment.product.size,
+          extraValidTo: currentPayment.product.validFor
+            ? date.setDate(date.getDate() + currentPayment.product.validFor)
+            : null,
+        },
+      )
+      .toPromise();
+    const payment = await this.paymentsRepository.update(currentPayment.id, {
+      confirmed: true,
+      fulfilledAt: Date.now(),
+    });
+    return payment;
+  }
+
+  async createMonthlySubscription(subscriptionData: CreateSubscriptionDto) {
+    // create subscription
+    const { priceId, customerId, userId } = subscriptionData;
+    const subscriptions = await this.stripeService.listSubscriptions(
+      priceId,
+      customerId,
+    );
+    if (subscriptions.data.length) {
+      throw new RpcException({
+        message: 'Customer already subscribed',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+    const product = await this.productRepository.findOne({
+      stripeProductId: priceId,
+    });
+    if (!product) {
+      throw new RpcException({
+        message: 'Missing product',
+        statusCode: HttpStatus.BAD_REQUEST,
+      });
+    }
+    const subscription = await this.stripeService.createSubscription(
+      priceId,
+      customerId,
+    );
+    const payment = await this.paymentsRepository.create({
+      productId: product.id,
+      userId,
+      amount: product.amount,
+      transactionId: subscription.id,
+    });
+
+    await this.paymentsRepository.save(payment);
+
+    return payment;
   }
 }

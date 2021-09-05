@@ -1,13 +1,17 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import {
   CreateStripeCustomerDto,
   CreateChargeDto,
   StripeEventEntity,
+  AddCreditCardDto,
+  StripeError,
+  // CreateSubscriptionDto,
 } from '@pdf-me/shared';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class StripeService {
@@ -38,6 +42,8 @@ export class StripeService {
       customer: customerId,
       payment_method: paymentMethodId,
       currency,
+      off_session: true,
+      confirm: true,
     });
   }
 
@@ -59,5 +65,74 @@ export class StripeService {
   async checkEvent(eventId: string) {
     const event = await this.stripeEventsRepository.findOne({ eventId });
     return !!event;
+  }
+
+  async attachCreditCard({ paymentMethodId, customerId }: AddCreditCardDto) {
+    return await this.stripe.setupIntents.create({
+      customer: customerId,
+      payment_method: paymentMethodId,
+    });
+  }
+
+  async listCreditCards(customerId: string) {
+    return this.stripe.paymentMethods.list({
+      customer: customerId,
+      type: 'card',
+    });
+  }
+
+  async setDefaultCreditCard({
+    paymentMethodId,
+    customerId,
+  }: AddCreditCardDto) {
+    try {
+      return await this.stripe.customers.update(customerId, {
+        invoice_settings: {
+          default_payment_method: paymentMethodId,
+        },
+      });
+    } catch (error) {
+      if (error?.type === StripeError.InvalidRequest) {
+        throw new RpcException({
+          message: 'Wrong credit card chosen',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+      throw new RpcException({
+        message: 'Something went wrong.',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  async createSubscription(priceId: string, customerId: string) {
+    try {
+      return await this.stripe.subscriptions.create({
+        customer: customerId,
+        items: [
+          {
+            price: priceId,
+          },
+        ],
+      });
+    } catch (error) {
+      if (error?.code === StripeError.ResourceMissing) {
+        throw new RpcException({
+          message: 'Credit card not set up',
+          statusCode: HttpStatus.BAD_REQUEST,
+        });
+      }
+      throw new RpcException({
+        message: 'Something went wrong.',
+        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    }
+  }
+
+  async listSubscriptions(priceId: string, customerId: string) {
+    return this.stripe.subscriptions.list({
+      customer: customerId,
+      price: priceId,
+    });
   }
 }
