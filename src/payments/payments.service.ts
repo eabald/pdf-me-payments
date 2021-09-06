@@ -92,8 +92,8 @@ export class PaymentsService {
       await this.limitsService
         .send({ cmd: 'limits-reset-subscription-by-id' }, currentPayment.userId)
         .toPromise();
+      return false;
     }
-    return false;
   }
 
   async procesCharge(event: Stripe.Event) {
@@ -123,7 +123,6 @@ export class PaymentsService {
   }
 
   async createMonthlySubscription(subscriptionData: CreateSubscriptionDto) {
-    // create subscription
     const { priceId, customerId, userId } = subscriptionData;
     const subscriptions = await this.stripeService.listSubscriptions(
       priceId,

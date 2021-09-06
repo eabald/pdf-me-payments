@@ -9,6 +9,7 @@ import {
   PaymentEntity,
   ProductEntity,
   StripeEventEntity,
+  InvoiceEntity,
 } from '@pdf-me/shared';
 
 @Module({
@@ -31,6 +32,7 @@ import {
           PaymentEntity,
           ProductEntity,
           StripeEventEntity,
+          InvoiceEntity,
         ],
         synchronize: true,
         logging: true,
