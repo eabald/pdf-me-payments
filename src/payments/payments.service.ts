@@ -51,7 +51,7 @@ export class PaymentsService {
       await this.stripeService.saveEvent(event.id);
     }
     if (event.type === 'payment_intent.succeeded') {
-      return await this.procesCharge(event);
+      return await this.processCharge(event);
     }
     if (
       event.type === 'customer.subscription.updated' ||
@@ -96,7 +96,7 @@ export class PaymentsService {
     }
   }
 
-  async procesCharge(event: Stripe.Event) {
+  async processCharge(event: Stripe.Event) {
     const paymentData: any = event.data.object;
     const currentPayment = await this.paymentsRepository.findOne({
       where: { transactionId: paymentData.id },
