@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { StripeModule } from './stripe/stripe.module';
 import { PaymentsModule } from './payments/payments.module';
 import { DatabaseModule } from './database/database.module';
+import { InvoicesModule } from './invoices/invoices.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { DatabaseModule } from './database/database.module';
     StripeModule,
     PaymentsModule,
     DatabaseModule,
+    InvoicesModule,
   ],
 })
 export class AppModule {}
