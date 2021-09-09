@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 import { StripeService } from '../stripe/stripe.service';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import Stripe from 'stripe';
+import { InvoicesService } from 'src/invoices/invoices.service';
 
 @Injectable()
 export class PaymentsService {
@@ -20,6 +21,7 @@ export class PaymentsService {
     @InjectRepository(ProductEntity)
     private productRepository: Repository<ProductEntity>,
     private readonly stripeService: StripeService,
+    private readonly invoicesService: InvoicesService,
     @Inject('LIMITS_SERVICE') private limitsService: ClientProxy,
   ) {}
 
@@ -33,6 +35,11 @@ export class PaymentsService {
     });
 
     await this.paymentsRepository.save(newPayment);
+    await this.invoicesService.createInvoice({
+      productId: data.productId,
+      userId: data.userId,
+      paymentId: newPayment.id,
+    });
     return newPayment;
   }
 
@@ -155,7 +162,11 @@ export class PaymentsService {
     });
 
     await this.paymentsRepository.save(payment);
-
+    await this.invoicesService.createInvoice({
+      productId: product.id,
+      userId,
+      paymentId: payment.id,
+    });
     return payment;
   }
 }
