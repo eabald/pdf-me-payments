@@ -6,6 +6,7 @@ import { PaymentEntity, ProductEntity } from '@pdf-me/shared';
 import { StripeModule } from '../stripe/stripe.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientProxyFactory, Transport } from '@nestjs/microservices';
+import { InvoicesModule } from '../invoices/invoices.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ClientProxyFactory, Transport } from '@nestjs/microservices';
     TypeOrmModule.forFeature([ProductEntity]),
     StripeModule,
     ConfigModule,
+    InvoicesModule,
   ],
   providers: [
     PaymentsService,
