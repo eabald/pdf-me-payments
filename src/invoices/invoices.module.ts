@@ -8,5 +8,6 @@ import { InvoicesController } from './invoices.controller';
   imports: [TypeOrmModule.forFeature([InvoiceEntity])],
   providers: [InvoicesService],
   controllers: [InvoicesController],
+  exports: [InvoicesModule],
 })
 export class InvoicesModule {}
