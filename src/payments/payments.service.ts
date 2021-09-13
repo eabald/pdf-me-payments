@@ -11,7 +11,7 @@ import { Repository } from 'typeorm';
 import { StripeService } from '../stripe/stripe.service';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import Stripe from 'stripe';
-import { InvoicesService } from 'src/invoices/invoices.service';
+import { InvoicesService } from '../invoices/invoices.service';
 
 @Injectable()
 export class PaymentsService {
