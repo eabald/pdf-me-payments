@@ -10,7 +10,7 @@ import {
   ProductEntity,
   StripeEventEntity,
   InvoiceEntity,
-} from '@pdf-me/shared';
+} from '@eabald/pdf-me-shared';
 
 @Module({
   imports: [

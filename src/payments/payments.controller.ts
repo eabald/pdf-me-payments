@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { CreatePaymentDto, StripeWebhookDataDto } from '@pdf-me/shared';
+import { CreatePaymentDto, StripeWebhookDataDto } from '@eabald/pdf-me-shared';
 
 @Controller('payments')
 export class PaymentsController {

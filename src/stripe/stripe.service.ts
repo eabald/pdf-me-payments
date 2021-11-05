@@ -8,7 +8,7 @@ import {
   AddCreditCardDto,
   StripeError,
   // CreateSubscriptionDto,
-} from '@pdf-me/shared';
+} from '@eabald/pdf-me-shared';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { RpcException } from '@nestjs/microservices';

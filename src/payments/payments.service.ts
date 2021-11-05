@@ -6,7 +6,7 @@ import {
   CreateSubscriptionDto,
   ProductEntity,
   CreatePaymentDto,
-} from '@pdf-me/shared';
+} from '@eabald/pdf-me-shared';
 import { Repository } from 'typeorm';
 import { StripeService } from '../stripe/stripe.service';
 import { ClientProxy, RpcException } from '@nestjs/microservices';

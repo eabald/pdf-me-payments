@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { InvoiceEntity, CreateInvoiceDto } from '@pdf-me/shared';
+import { InvoiceEntity, CreateInvoiceDto } from '@eabald/pdf-me-shared';
 import { Repository, IsNull } from 'typeorm';
 
 @Injectable()

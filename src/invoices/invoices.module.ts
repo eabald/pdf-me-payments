@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { InvoicesService } from './invoices.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { InvoiceEntity } from '@pdf-me/shared';
+import { InvoiceEntity } from '@eabald/pdf-me-shared';
 import { InvoicesController } from './invoices.controller';
 
 @Module({

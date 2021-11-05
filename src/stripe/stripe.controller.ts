@@ -1,6 +1,9 @@
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { CreateStripeCustomerDto, AddCreditCardDto } from '@pdf-me/shared';
+import {
+  CreateStripeCustomerDto,
+  AddCreditCardDto,
+} from '@eabald/pdf-me-shared';
 import { StripeService } from './stripe.service';
 
 @Controller('stripe')
